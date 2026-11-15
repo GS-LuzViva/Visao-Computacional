@@ -45,12 +45,12 @@
       classifica cada luminária: <span class="acesa">verde = acesa</span>, <span class="apagada">vermelho = apagada</span>,
       <span class="incerta">cinza = incerta</span> (confiança abaixo de 40%).</p>
     <p class="dica"><b>Simulação em tempo real:</b> no uso real, a câmera ficaria instalada na rua. Dada a dificuldade
-      de levar o equipamento até lá, selecionamos fotos de rua que o modelo não viu no treino, e cada uma é analisada
+      de levar o equipamento até lá, selecionamos fotos de rua (5 do conjunto de teste, que o modelo não viu no treino, e 1 noturna anotada pela equipe), e cada uma é analisada
       como um quadro da câmera. O modelo leva poucos milissegundos por quadro (tempo exibido no resultado), o que
       permite aplicá-lo em tempo real.</p>
 
     <h2>Escolha uma foto</h2>
-    <h3>Exemplos (fotos que o modelo não viu no treino)</h3>
+    <h3>Exemplos (5 do teste e 1 noturna do treino)</h3>
     <div class="exemplos" id="exemplos"></div>
     <h3>Ou envie uma foto sua</h3>
     <label class="enviar">Enviar foto do computador<input type="file" accept="image/*" onchange="enviarArquivo(this)"></label>

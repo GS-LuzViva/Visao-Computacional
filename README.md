@@ -28,7 +28,7 @@ As funções estão implementadas em `visao.py`, e o notebook `visao.ipynb` exec
 
 ![Site do detector](resultados/site.png)
 
-A interface web permite selecionar uma das imagens de exemplo (não utilizadas no treinamento) ou enviar uma imagem própria. Legenda: verde = acesa, vermelho = apagada e cinza = incerta (confiança abaixo de 40%).
+A interface web permite selecionar uma das imagens de exemplo (5 do conjunto de teste, não utilizadas no treinamento, e 1 imagem noturna anotada pela equipe) ou enviar uma imagem própria. Legenda: verde = acesa, vermelho = apagada e cinza = incerta (confiança abaixo de 40%).
 
 ## 01. Dataset
 
@@ -106,7 +106,7 @@ Em uma aplicação real, a câmera ficaria instalada na via. Dada a dificuldade 
 
 ![Exemplos](resultados/exemplos.jpg)
 
-Imagens do conjunto de teste, com pessoas e veículos desfocados (LGPD).
+Cinco imagens do conjunto de teste e uma imagem noturna anotada pela equipe (usada no treino), com pessoas e veículos desfocados (LGPD).
 
 ## 06. Execução
 

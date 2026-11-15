@@ -14,7 +14,7 @@ from visao import PASTA, desenhar, detectar
 
 app = FastAPI(title="LuzViva Visão")
 
-# Fotos de exemplo (do teste, o modelo nunca viu) e a área que o site mostra de cada uma (x, y, largura, altura).
+# Fotos de exemplo (5 do teste, que o modelo nunca viu, e 1 noturna do treino) e a área que o site mostra (x, y, largura, altura).
 # O modelo analisa o quadro inteiro, como a câmera na rua, e o site mostra só a área das luminárias (todas em 16:9)
 RECORTES = {
     "01_apagada_6_00390.jpg": (24, 4, 596, 335),
@@ -22,6 +22,7 @@ RECORTES = {
     "03_acesa_10_00363.jpg": (357, 10, 922, 519),
     "04_acesa_10_00340.jpg": (4, 0, 882, 496),
     "05_acesa_9_00228.jpg": (8, 0, 927, 521),
+    "06_apagada_noite_14.jpg": (60, 40, 452, 254),  # noturna do Roboflow anotada pela equipe (usada no treino)
 }
 
 
