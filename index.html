@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LuzViva · Visão</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 0; background: #f4f5f7; color: #222; }
+  header { background: #1d2b3a; color: #fff; padding: 16px 24px; }
+  header h1 { margin: 0; font-size: 22px; }
+  header p { margin: 4px 0 0; color: #c9d3dd; font-size: 14px; }
+  main { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; padding: 20px 24px; }
+  section { background: #fff; border-radius: 8px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+  h2 { margin-top: 0; font-size: 17px; }
+  h3 { font-size: 14px; margin: 16px 0 6px; color: #555; }
+  .enviar { display: inline-block; padding: 10px 14px; background: #1d6fd8; color: #fff; border-radius: 4px;
+            cursor: pointer; font-size: 14px; border: 0; }
+  .dica { font-size: 13px; color: #555; margin: 8px 0 14px; line-height: 1.5; }
+  .enviar input { display: none; }
+  .exemplos { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .exemplos img { width: 100%; border-radius: 4px; cursor: pointer; border: 3px solid transparent; }
+  .exemplos img:hover { border-color: #9cc0f5; }
+  .exemplos img.escolhida { border-color: #1d6fd8; }
+  #foto { width: 100%; border-radius: 4px; }
+  .resumo { margin: 12px 0; font-size: 16px; }
+  .acesa { color: #27ae60; font-weight: bold; }
+  .apagada { color: #c0392b; font-weight: bold; }
+  .incerta { color: #888; }
+  .vazio { color: #777; padding: 40px 0; text-align: center; }
+  table { border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 6px 12px; border-bottom: 1px solid #eee; }
+  @media (max-width: 800px) { main { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>LuzViva · Detector de luminárias</h1>
+  <p>Escolha uma imagem de rua: o modelo identifica as luminárias acesas e apagadas.</p>
+</header>
+
+<main>
+  <section>
+    <h2>Como funciona</h2>
+    <p class="dica">O modelo (YOLO11, uma rede neural convolucional com treinamento personalizado) analisa a imagem e
+      classifica cada luminária: <span class="acesa">verde = acesa</span>, <span class="apagada">vermelho = apagada</span>,
+      <span class="incerta">cinza = incerta</span> (confiança abaixo de 40%).</p>
+    <p class="dica"><b>Simulação em tempo real:</b> no uso real, a câmera ficaria instalada na rua. Dada a dificuldade
+      de levar o equipamento até lá, selecionamos fotos de rua que o modelo não viu no treino, e cada uma é analisada
+      como um quadro da câmera. O modelo leva poucos milissegundos por quadro (tempo exibido no resultado), o que
+      permite aplicá-lo em tempo real.</p>
+
+    <h2>Escolha uma foto</h2>
+    <h3>Exemplos (fotos que o modelo não viu no treino)</h3>
+    <div class="exemplos" id="exemplos"></div>
+    <h3>Ou envie uma foto sua</h3>
+    <label class="enviar">Enviar foto do computador<input type="file" accept="image/*" onchange="enviarArquivo(this)"></label>
+  </section>
+
+  <section>
+    <h2>Resultado</h2>
+    <div id="resultado"><div class="vazio">Nenhuma foto escolhida ainda.</div></div>
+  </section>
+</main>
+
+<script>
+  // mostra as fotos de exemplo (só a área recortada de cada uma)
+  fetch("/lista_exemplos").then(r => r.json()).then(lista => {
+    document.getElementById("exemplos").innerHTML =
+      lista.map(n => `<img src="/exemplos/${n}" onclick="usarExemplo(this, '${n}')">`).join("");
+  });
+
+  // clicar num exemplo: o modelo analisa o quadro inteiro e devolve só a área recortada
+  function usarExemplo(img, nome) {
+    document.querySelectorAll(".exemplos img").forEach(i => i.classList.remove("escolhida"));
+    img.classList.add("escolhida");
+    analisar(() => fetch(`/detectar_exemplo/${nome}`, {method: "POST"}));
+  }
+
+  // foto enviada do computador
+  function enviarArquivo(input) {
+    document.querySelectorAll(".exemplos img").forEach(i => i.classList.remove("escolhida"));
+    if (!input.files[0]) return;
+    const form = new FormData();
+    form.append("foto", input.files[0], "foto.jpg");
+    analisar(() => fetch("/detectar", {method: "POST", body: form}));
+  }
+
+  async function analisar(pedido) {
+    const caixa = document.getElementById("resultado");
+    caixa.innerHTML = '<div class="vazio">Analisando...</div>';
+    try {
+      const d = await (await pedido()).json();
+      // abaixo de 40% de confiança a luminária conta como "incerta" (caixa cinza)
+      const certas = d.luminarias.filter(l => l.confianca >= 0.4);
+      const acesas = certas.filter(l => l.classe == "acesa").length;
+      const apagadas = certas.length - acesas;
+      const incertas = d.luminarias.length - certas.length;
+      const linhas = d.luminarias.map(l => {
+        const classe = l.confianca >= 0.4 ? l.classe : "incerta";
+        const texto = l.confianca >= 0.4 ? l.classe : `incerta (${l.classe}?)`;
+        return `<tr><td class="${classe}">${texto}</td><td>${(l.confianca * 100).toFixed(0)}%</td></tr>`;
+      }).join("");
+      caixa.innerHTML = `<img id="foto" src="${d.imagem}">
+        <div class="resumo"><span class="acesa">${acesas} acesa(s)</span> · <span class="apagada">${apagadas} apagada(s)</span>
+        ${incertas ? ` · <span class="incerta">${incertas} incerta(s)</span>` : ""} · <span class="tempo">${d.tempo_ms} ms</span></div>
+        ${d.luminarias.length ? `<table><tr><th>Luminária</th><th>Confiança</th></tr>${linhas}</table>`
+                              : "<p>Nenhuma luminária encontrada.</p>"}`;
+    } catch (e) {
+      caixa.innerHTML = '<div class="vazio">Detector indisponível. Confira se a API está rodando.</div>';
+    }
+  }
+</script>
+</body>
+</html>
